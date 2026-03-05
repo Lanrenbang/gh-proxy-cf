@@ -57,6 +57,28 @@ export default {
 			return Response.redirect('https://' + urlObj.host + '/' + q, 301);
 		}
 
+		// Support subpath routing (e.g. /gh/https://github.com/... or /proxy/api.github.com/...)
+		// Find the first occurrence of any known GitHub domain and strip the prefix.
+		const domainsPattern = GITHUB_DOMAINS.map((d) => d.replace(/\./g, '\\.')).join('|');
+		const extractRegex = new RegExp(`(?:^|/)(?:https?:/+)?(${domainsPattern})(?:/|\\?|$)`, 'i');
+		const match = targetStr.match(extractRegex);
+		let proxyPrefix = '';
+		if (match) {
+			const domain = match[1];
+			const domainIdx = targetStr.toLowerCase().indexOf(domain.toLowerCase());
+
+			const beforeDomain = targetStr.slice(0, domainIdx);
+			proxyPrefix = beforeDomain.replace(/https?:\/+$/i, '');
+			const domainAndAfter = targetStr.slice(domainIdx);
+
+			if (beforeDomain.match(/https?:\/+$/i)) {
+				const protoMatch = beforeDomain.match(/(https?:\/+)$/i);
+				targetStr = protoMatch![1] + domainAndAfter;
+			} else {
+				targetStr = 'https://' + domainAndAfter;
+			}
+		}
+
 		// Fix the protocol
 		if (targetStr.startsWith('http:/') && !targetStr.startsWith('http://')) {
 			targetStr = targetStr.replace('http:/', 'http://');
@@ -167,7 +189,7 @@ export default {
 			try {
 				const locUrl = new URL(loc);
 				if (GITHUB_DOMAINS.some((d) => locUrl.hostname === d || locUrl.hostname.endsWith('.' + d))) {
-					loc = 'https://' + urlObj.host + '/' + loc;
+					loc = 'https://' + urlObj.host + '/' + proxyPrefix + loc;
 					resHeaders.set('location', loc);
 				}
 			} catch (e) {
