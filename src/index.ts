@@ -52,11 +52,6 @@ export default {
 		// Parse target url
 		let targetStr = urlObj.href.slice(urlObj.origin.length + 1); // remove origin + leading slash
 
-		const q = urlObj.searchParams.get('q');
-		if (q) {
-			return Response.redirect('https://' + urlObj.host + '/' + q, 301);
-		}
-
 		// Support subpath routing (e.g. /gh/https://github.com/... or /proxy/api.github.com/...)
 		// Find the first occurrence of any known GitHub domain and strip the prefix.
 		const domainsPattern = GITHUB_DOMAINS.map((d) => d.replace(/\./g, '\\.')).join('|');
