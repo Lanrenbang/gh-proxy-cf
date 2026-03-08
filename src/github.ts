@@ -1,15 +1,7 @@
 import { Env } from './types';
 import { makeRes, extractTargetUrl } from './utils';
 
-export const GITHUB_DOMAINS = [
-	'github.com',
-	'api.github.com',
-	'raw.githubusercontent.com',
-	'gist.githubusercontent.com',
-	'avatars.githubusercontent.com',
-	'camo.githubusercontent.com',
-	'githubassets.com',
-];
+export const GITHUB_DOMAINS = ['github.com', 'api.github.com', 'githubusercontent.com', 'githubassets.com'];
 
 export async function handleGitHubProxy(request: Request, env: Env, urlObj: URL): Promise<Response | null> {
 	let { targetStr, proxyPrefix } = extractTargetUrl(urlObj.href.slice(urlObj.origin.length + 1), GITHUB_DOMAINS);
@@ -35,7 +27,7 @@ export async function handleGitHubProxy(request: Request, env: Env, urlObj: URL)
 
 	// Check Whitelist / Blacklist based on user/repo
 	let repoPath = '';
-	if (hostname === 'github.com' || hostname === 'api.github.com' || hostname === 'raw.githubusercontent.com') {
+	if (hostname === 'github.com' || hostname === 'api.github.com' || hostname.endsWith('githubusercontent.com')) {
 		const parts = targetUrl.pathname.split('/').filter(Boolean);
 		if (hostname === 'api.github.com' && parts[0] === 'repos' && parts.length >= 3) {
 			repoPath = `${parts[1]}/${parts[2]}`; // user/repo
