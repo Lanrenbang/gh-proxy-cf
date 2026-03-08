@@ -1,12 +1,13 @@
 # gh-proxy-cf
 
-为 Obtainium 等工具打造的 Cloudflare Workers 版本的 GitHub 加速代理。
+为 Obtainium 等工具打造的 Cloudflare Workers 版本的 GitHub & Uptodown 加速代理。
 
 ## 项目特点
 
 1. **兼容 Obtainium**：完全支持 Obtainium 的 `GHReqPrefix` 配置，可正确代理 `api.github.com` 的请求，解决诸如 `gh-proxy` 等项目遇到 API 就会返回 404 的问题。
 2. **突破 GitHub API 速率限制**：因为安全限制，Obtainium 在开启代理时会**自动清除**用户输入的 PAT (Personal Access Token)，从而导致代理请求是匿名的并极易触发公共服务的 60次/小时 速率限制。本项目支持在 Cloudflare 后台配置 `GITHUB_TOKEN` 环境变量，自动为您的所有代理请求带上您的个人 Token，享受 5000次/小时 的高额度。
-3. **安全与资源管控**：支持配置 白名单/黑名单 和 文件大小限制，防止您的自建节点被他人滥用或消耗过多 Cloudflare 额度。
+3. **支持 Uptodown 代理与搜索**：新增 `/search` 接口，支持通过包名或 URL 自动抓取 Uptodown 的最新版本和下载链接，并自动通过 Worker 代理下载。
+4. **安全与资源管控**：支持配置 白名单/黑名单、文件大小限制以及 API 访问令牌 (`PROXY_AUTH_TOKEN`)。
 
 ## 部署与使用
 
@@ -22,19 +23,47 @@ npm run deploy
 
 ### 2. 在 Obtainium 中使用
 
+#### GitHub 代理
 在 Obtainium 的 GitHub 设置中，找到 `GitHub Release 请求前缀` (GHReqPrefix) 选项，填入您的 Worker 域名，不需要 `https://`，例如：
 `your-worker-name.your-subdomain.workers.dev`
+#### Uptodown 搜索 (HTML Source)
+如果您想在 Obtainium 中通过 HTML Source 添加 Uptodown 应用并自动更新，可以按如下配置：
+1. **URL**: `https://<your-worker>/search?source=uptodown&app=<package_id_or_url>`
+2. **Override Source Name**: `Uptodown`
+3. **Custom Headers**: 如果您配置了 `PROXY_AUTH_TOKEN`，需要添加 `X-Proxy-Auth: <your_token>`
+4. **Filters**:
+   - **Version detection**: 匹配 `class="version"` 的内容。
+   - **Download URL detection**: 匹配 `id="download"` 的 `href` 属性。
+
 
 ### 3. 配置环境变量 (可选但强烈建议)
 
 在 Cloudflare Workers 后台 -> **Settings (设置)** -> **Variables and Secrets (变量和机密)** 中，您可以添加以下变量：
 
 - `GITHUB_TOKEN`: 填入您的 GitHub Personal Access Token (PAT)。强烈建议配置，这可以彻底解决 Obtainium 在使用代理时的速率限制问题。**必须创建为机密而不是变量**
+- `PROXY_AUTH_TOKEN`: (Secret) 设置后，访问 `/search` 接口必须带上 `X-Proxy-Auth` 请求头。
 - `SIZE_LIMIT_MB`: 限制允许代理下载的最大文件（单位：MB）。超过此大小的请求将被 302 重定向到原 GitHub 地址。填 `0` 或不填表示不限制。
 - `WHITELIST`: 仓库白名单，多个用逗号分隔。例如 `username1/repo1,username2/repo2`。配置后只允许代理这些仓库。
 - `BLACKLIST`: 仓库黑名单，多个用逗号分隔。配置后这些仓库将被拒绝访问。
 
 > 注：`WHITELIST` 和 `BLACKLIST` 不能同时为空以达到部分限制的效果；若只需全开，则保留为空即可。
+
+## API 接口
+### `/search`
+用于获取应用的最新版本和代理下载链接。
+- **参数**:
+  - `source`: 目前仅支持 `uptodown`
+  - `app`: Uptodown 的应用包名 (如 `com.whatsapp`) 或完整 URL
+- **请求头**:
+  - `X-Proxy-Auth`: (可选) 如果配置了 `PROXY_AUTH_TOKEN` 则必填
+  - `Accept`: 设置为 `application/json` 返回 JSON 格式，否则返回 HTML
+- **返回示例 (JSON)**:
+  ```json
+  {
+    "version": "3.4",
+    "downloadUrl": "https://your-worker.dev/https://dw.uptodown.com/dwn/..."
+  }
+  ```
 
 ## 相关项目
 - [Obtainium](https://https://github.com/ImranR98/Obtainium)
