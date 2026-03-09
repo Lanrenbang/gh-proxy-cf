@@ -158,10 +158,9 @@ export async function handleUptodownProxy(request: Request, env: Env, urlObj: UR
 	}
 
 	const hostname = targetUrl.hostname;
-	if (!hostname.endsWith('uptodown.com')) {
+	if (!hostname.endsWith('uptodown.com') && !hostname.endsWith('uptodown.net')) {
 		return null;
 	}
-
 	// Forward headers
 	const reqHeaders = new Headers(request.headers);
 	reqHeaders.delete('host');
