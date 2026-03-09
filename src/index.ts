@@ -21,7 +21,7 @@ export default {
 		}
 
 		// Handle /search endpoint
-		if (path === '/search') {
+		if (path === '/search' || path.endsWith('/search')) {
 			// Auth check
 			if (env.PROXY_AUTH_TOKEN) {
 				const authHeader = request.headers.get('X-Proxy-Auth');
