@@ -31,8 +31,8 @@ npm run deploy
 1. **添加应用**时选择 `HTML Webpage` 作为来源。
 2. **URL** 填入我们的代理搜索接口：`https://<your-worker>/search?source=uptodown&app=<package_id_or_url>` （例如 `app=com.whatsapp` 或直接填入 Uptodown 页面 URL）
 3. 展开底部的高级设置 (Additional Settings)：
-   - **提取版本号的正则表达式 (Version extraction RegEx)** 填入：`class="version">([^<]+)</div>`
-   - **筛选自定义来源的 APK 文件链接 (Custom Link Filter RegEx)** 填入：`id="download"` 或者留空（页面仅此一个链接）。
+   - **提取版本号的正则表达式 (Version extraction RegEx)** 填入：`v([^/]+)\.apk`
+   - **筛选自定义来源的 APK 文件链接 (Custom Link Filter RegEx)**：留空即可。
    - 如果您配置了防滥用的 `PROXY_AUTH_TOKEN`，请在 **Request Header** (请求头) 中添加：`X-Proxy-Auth: <your_token>`
 
 
