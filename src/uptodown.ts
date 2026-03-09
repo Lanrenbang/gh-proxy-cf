@@ -12,7 +12,13 @@ export async function handleUptodownSearch(request: Request, env: Env): Promise<
 	}
 
 	let appUrl = app;
-	if (!app.startsWith('http')) {
+	if (appUrl.startsWith('http:/') && !appUrl.startsWith('http://')) {
+		appUrl = appUrl.replace('http:/', 'http://');
+	} else if (appUrl.startsWith('https:/') && !appUrl.startsWith('https://')) {
+		appUrl = appUrl.replace('https:/', 'https://');
+	}
+
+	if (!appUrl.startsWith('http')) {
 		// It's a package ID or app name, search for it
 		const searchUrl = `https://en.uptodown.com/android/search/${app}`;
 		const searchRes = await fetch(searchUrl, {
@@ -115,9 +121,8 @@ export async function handleUptodownSearch(request: Request, env: Env): Promise<
 	const path = workerUrl.pathname;
 	const proxyPrefix = path.endsWith('/search') ? path.slice(1, -6) : '';
 	const proxiedUrl = proxyPrefix
-		? `${workerUrl.origin}/${proxyPrefix}${downloadUrl}#app.apk`
-		: `${workerUrl.origin}/${downloadUrl}#app.apk`;
-
+		? `${workerUrl.origin}/${proxyPrefix}${downloadUrl}/app.apk`
+		: `${workerUrl.origin}/${downloadUrl}/app.apk`;
 	const accept = request.headers.get('Accept') || '';
 	if (accept.includes('application/json')) {
 		return makeRes(
@@ -143,6 +148,10 @@ export async function handleUptodownProxy(request: Request, env: Env, urlObj: UR
 
 	let targetUrl: URL;
 	try {
+		// Strip the dummy /app.apk we added for Obtainium's parser
+		if (targetStr.endsWith('/app.apk')) {
+			targetStr = targetStr.slice(0, -8);
+		}
 		targetUrl = new URL(targetStr);
 	} catch (e) {
 		return null;
