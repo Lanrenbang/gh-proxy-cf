@@ -27,13 +27,13 @@ npm run deploy
 在 Obtainium 的 GitHub 设置中，找到 `GitHub Release 请求前缀` (GHReqPrefix) 选项，填入您的 Worker 域名，不需要 `https://`，例如：
 `your-worker-name.your-subdomain.workers.dev`
 #### Uptodown 搜索 (HTML Source)
-如果您想在 Obtainium 中通过 HTML Source 添加 Uptodown 应用并自动更新，可以按如下配置：
-1. **URL**: `https://<your-worker>/search?source=uptodown&app=<package_id_or_url>`
-2. **Override Source Name**: `Uptodown`
-3. **Custom Headers**: 如果您配置了 `PROXY_AUTH_TOKEN`，需要添加 `X-Proxy-Auth: <your_token>`
-4. **Filters**:
-   - **Version detection**: 匹配 `class="version"` 的内容。
-   - **Download URL detection**: 匹配 `id="download"` 的 `href` 属性。
+如果您想在 Obtainium 中通过 HTML Webpage 源添加 Uptodown 应用并自动更新，请按照如下步骤配置：
+1. **添加应用**时选择 `HTML Webpage` 作为来源。
+2. **URL** 填入我们的代理搜索接口：`https://<your-worker>/search?source=uptodown&app=<package_id_or_url>` （例如 `app=com.whatsapp` 或直接填入 Uptodown 页面 URL）
+3. 展开底部的高级设置 (Additional Settings)：
+   - **提取版本号的正则表达式 (Version extraction RegEx)** 填入：`class="version">([^<]+)</div>`
+   - **筛选自定义来源的 APK 文件链接 (Custom Link Filter RegEx)** 填入：`id="download"` 或者留空（页面仅此一个链接）。
+   - 如果您配置了防滥用的 `PROXY_AUTH_TOKEN`，请在 **Request Header** (请求头) 中添加：`X-Proxy-Auth: <your_token>`
 
 
 ### 3. 配置环境变量 (可选但强烈建议)
