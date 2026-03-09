@@ -116,13 +116,14 @@ export async function handleUptodownSearch(request: Request, env: Env): Promise<
 	const downloadUrl = `https://dw.uptodown.com/dwn/${finalUrlKey}`;
 
 	// Construct proxied download link
-	// We append "#app.apk" so that Obtainium's default HTML source parser recognizes it as an APK link
+	// We append `/v${version}.apk` so that Obtainium's default HTML source parser recognizes it as an APK link
+	// AND can extract the version directly from the URL.
 	const workerUrl = new URL(request.url);
 	const path = workerUrl.pathname;
 	const proxyPrefix = path.endsWith('/search') ? path.slice(1, -6) : '';
 	const proxiedUrl = proxyPrefix
-		? `${workerUrl.origin}/${proxyPrefix}${downloadUrl}/app.apk`
-		: `${workerUrl.origin}/${downloadUrl}/app.apk`;
+		? `${workerUrl.origin}/${proxyPrefix}${downloadUrl}/v${version}.apk`
+		: `${workerUrl.origin}/${downloadUrl}/v${version}.apk`;
 	const accept = request.headers.get('Accept') || '';
 	if (accept.includes('application/json')) {
 		return makeRes(
@@ -148,9 +149,9 @@ export async function handleUptodownProxy(request: Request, env: Env, urlObj: UR
 
 	let targetUrl: URL;
 	try {
-		// Strip the dummy /app.apk we added for Obtainium's parser
-		if (targetStr.endsWith('/app.apk')) {
-			targetStr = targetStr.slice(0, -8);
+		// Strip the dummy /v1.2.3.apk we added for Obtainium's parser
+		if (targetStr.match(/\/v[^\/]+\.apk$/)) {
+			targetStr = targetStr.replace(/\/v[^\/]+\.apk$/, '');
 		}
 		targetUrl = new URL(targetStr);
 	} catch (e) {
