@@ -110,8 +110,13 @@ export async function handleUptodownSearch(request: Request, env: Env): Promise<
 	const downloadUrl = `https://dw.uptodown.com/dwn/${finalUrlKey}`;
 
 	// Construct proxied download link
+	// We append "#app.apk" so that Obtainium's default HTML source parser recognizes it as an APK link
 	const workerUrl = new URL(request.url);
-	const proxiedUrl = `${workerUrl.origin}/${downloadUrl}`;
+	const path = workerUrl.pathname;
+	const proxyPrefix = path.endsWith('/search') ? path.slice(1, -6) : '';
+	const proxiedUrl = proxyPrefix
+		? `${workerUrl.origin}/${proxyPrefix}${downloadUrl}#app.apk`
+		: `${workerUrl.origin}/${downloadUrl}#app.apk`;
 
 	const accept = request.headers.get('Accept') || '';
 	if (accept.includes('application/json')) {
