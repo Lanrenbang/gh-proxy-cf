@@ -120,7 +120,15 @@ export async function handleGitHubProxy(request: Request, env: Env, urlObj: URL)
 	resHeaders.delete('content-security-policy-report-only');
 	resHeaders.delete('clear-site-data');
 
-	return new Response(res.body, {
+	let body: BodyInit | null = res.body;
+	const resContentLength = res.headers.get('content-length');
+	// If the response is small (less than 2MB), buffer it so Cloudflare calculates and sends the correct content-length header.
+	// This prevents Dart's HttpClient from hanging waiting for chunked EOF on small API responses (like 404s).
+	if (resContentLength && parseInt(resContentLength, 10) < 2 * 1024 * 1024) {
+		body = await res.arrayBuffer();
+	}
+
+	return new Response(body, {
 		status: res.status,
 		headers: resHeaders,
 	});

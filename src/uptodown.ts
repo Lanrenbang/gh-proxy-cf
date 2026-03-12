@@ -219,7 +219,13 @@ export async function handleUptodownProxy(request: Request, env: Env, urlObj: UR
 	resHeaders.delete('content-security-policy-report-only');
 	resHeaders.delete('clear-site-data');
 
-	return new Response(res.body, {
+	let body: BodyInit | null = res.body;
+	const resContentLength = res.headers.get('content-length');
+	if (resContentLength && parseInt(resContentLength, 10) < 2 * 1024 * 1024) {
+		body = await res.arrayBuffer();
+	}
+
+	return new Response(body, {
 		status: res.status,
 		headers: resHeaders,
 	});
