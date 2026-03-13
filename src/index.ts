@@ -2,6 +2,7 @@ import { Env } from './types';
 import { PREFLIGHT_INIT, makeRes } from './utils';
 import { handleGitHubProxy } from './github';
 import { handleUptodownSearch, handleUptodownProxy } from './uptodown';
+import { handleWechatApi } from './wechat_api';
 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -37,7 +38,11 @@ export default {
 			return makeRes('Invalid source', 400);
 		}
 
-		// Try GitHub proxy
+		const wechatApiRes = await handleWechatApi(request);
+		if (wechatApiRes) {
+			return wechatApiRes;
+		}
+
 		const githubRes = await handleGitHubProxy(request, env, urlObj);
 		if (githubRes) {
 			return githubRes;
